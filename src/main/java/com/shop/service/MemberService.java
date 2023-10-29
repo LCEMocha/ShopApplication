@@ -56,10 +56,13 @@ public class MemberService implements UserDetailsService{
     }
 
     public Member saveOAuth2Member(OAuth2UserRequest userRequest, OAuth2User oAuth2User) {
+
         String provider = userRequest.getClientRegistration().getRegistrationId(); // OAuth2 제공자의 이름 (예: google)
         String providerId = oAuth2User.getName(); // 제공자의 사용자 ID
         String email = oAuth2User.getAttribute("email"); // 이메일
         String name = oAuth2User.getAttribute("name"); // 이름
+
+        System.out.println("Searching for email, name: " + email + name + "이거는 memberservice");
 
         Member member = memberRepository.findByProviderAndProviderId(provider, providerId);
 

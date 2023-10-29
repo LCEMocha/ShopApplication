@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -13,14 +14,19 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
-
 import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
+
+import static org.springframework.security.config.Customizer.withDefaults;
+import com.shop.service.CustomOAuth2UserService;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@Order(2)
 public class SecurityConfig {
 
+    @Autowired
+    private CustomOAuth2UserService customOAuth2UserService;
 
     @Autowired
     MemberService memberService;
@@ -30,9 +36,12 @@ public class SecurityConfig {
         return new MvcRequestMatcher.Builder(introspector);
     }
 
-    @Bean
+    @Bean(name = "generalFilterChain")
     public SecurityFilterChain filterChain(HttpSecurity http, MvcRequestMatcher.Builder mvc) throws Exception {
-        http.formLogin()
+        http
+                .csrf(withDefaults())
+                .cors(withDefaults())
+                .formLogin()
                 .loginPage("/members/login")
                 .defaultSuccessUrl("http://localhost:8080/")
                 .usernameParameter("email")
@@ -44,15 +53,21 @@ public class SecurityConfig {
         ;
 
         http.oauth2Login()
-                .loginPage("/oauth2/authorization/google") //Google 로그인 페이지로 리다이렉트
+                //.loginPage("/oauth2/authorization/google") //Google 로그인 페이지로 리다이렉트
                 .defaultSuccessUrl("http://localhost:8080/")
                 .failureUrl("/loginFailure")
                 .userInfoEndpoint()
+                .userService(customOAuth2UserService)
+
+        //.and()
+        //.loginPage("/oauth2/authorization/kakao") //카카오 로그인 페이지로 리다이렉트
+        //.defaultSuccessUrl("http://localhost:8080/")
+        //.failureUrl("/loginFailure");
         ;
 
         http.authorizeHttpRequests((authorize) -> authorize
-        //permitAll()을 통해 모든 사용자가 인증(로그인) 없이 해당 경로에 접근할 수 있도록 설정한다.
-        //admin으로 시작하는 경로는 해당 계정이 ADMIN Role일 때만 접근 가능하도록 설정한다.
+                //permitAll()을 통해 모든 사용자가 인증(로그인) 없이 해당 경로에 접근할 수 있도록 설정한다.
+                //admin으로 시작하는 경로는 해당 계정이 ADMIN Role일 때만 접근 가능하도록 설정한다.
                 .requestMatchers(antMatcher("/css/**")).permitAll()
                 .requestMatchers(antMatcher("/js/**")).permitAll()
                 .requestMatchers(antMatcher("/img/**")).permitAll()
@@ -61,6 +76,7 @@ public class SecurityConfig {
                 .requestMatchers(antMatcher("/item/**")).permitAll()
                 .requestMatchers(antMatcher("/images/**")).permitAll()
                 .requestMatchers(antMatcher("/admin/**")).hasRole("ADMIN")
+                .requestMatchers(antMatcher("/oauth2/authorization/**")).permitAll()
                 .anyRequest().authenticated() //설정한 경로를 제외한 나머지 경로들은 모두 인증을 요구하도록 설정한다.
         )
         ;
