@@ -24,14 +24,12 @@ public class KakaoOAuth2UserService extends DefaultOAuth2UserService {
 
     private final HttpSession httpSession;
     private final MemberRepository memberRepository;
-    private final MemberService memberService;
 
+    //OAuth 2.0 제공자로부터 사용자 정보를 로드하고 로그인 세션 저장 수행
+    //Spring Security에서 이 메서드의 반환값(OAuth2User 객체)를 사용하여 인증된 사용자의 정보를 관리하고, 보안 관련 작업을 수행
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(userRequest);
-
-        // 로그인한 사용자의 정보를 바탕으로 DB에 저장 또는 업데이트
-        memberService.saveOAuth2Member(userRequest, oAuth2User);
 
         Map<String, Object> attributes = oAuth2User.getAttributes();
 
@@ -43,6 +41,7 @@ public class KakaoOAuth2UserService extends DefaultOAuth2UserService {
                 oAuth2User.getAttributes(), "id");
     }
 
+    // KakaoOAuth2Member의 회원정보 조회 및 가입
     public Member saveKakaoOAuth2Member(OAuth2UserRequest userRequest, OAuth2User oAuth2User) {
         String provider = userRequest.getClientRegistration().getRegistrationId();
         String providerId = oAuth2User.getName();

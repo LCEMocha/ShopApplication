@@ -62,7 +62,7 @@ public class MemberService implements UserDetailsService{
         String email = oAuth2User.getAttribute("email"); // 이메일
         String name = oAuth2User.getAttribute("name"); // 이름
 
-        System.out.println("Searching for email, name: " + email + name + "이거는 memberservice");
+        //System.out.println("Searching for email: " + email);
 
         Member member = memberRepository.findByProviderAndProviderId(provider, providerId);
 

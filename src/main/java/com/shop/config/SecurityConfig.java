@@ -59,10 +59,6 @@ public class SecurityConfig {
                 .userInfoEndpoint()
                 .userService(customOAuth2UserService)
 
-        //.and()
-        //.loginPage("/oauth2/authorization/kakao") //카카오 로그인 페이지로 리다이렉트
-        //.defaultSuccessUrl("http://localhost:8080/")
-        //.failureUrl("/loginFailure");
         ;
 
         http.authorizeHttpRequests((authorize) -> authorize
