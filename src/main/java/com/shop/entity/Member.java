@@ -8,6 +8,9 @@ import lombok.ToString;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Entity
 @Table(name="member")
@@ -53,4 +56,8 @@ public class Member extends BaseEntity{
         member.setRole(Role.ADMIN);
         return member;
     }
+
+    // Member와 Coupon의 양방향 연결 설정
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Coupon> coupons = new ArrayList<>();
 }
