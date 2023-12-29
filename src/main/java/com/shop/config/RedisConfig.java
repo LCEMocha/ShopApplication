@@ -24,7 +24,9 @@ public class RedisConfig {
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
+
     @Bean
+        // Redis 커넥션 팩토리를 사용하여 메시지 리스너 등록, CouponIssuance 채널 구독하도록 설정
     RedisMessageListenerContainer redisContainer(RedisConnectionFactory connectionFactory, CouponMessageListener listener) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
@@ -33,6 +35,7 @@ public class RedisConfig {
     }
 
     @Component
+    // CouponIssuance 채널에서 메시지 받아 처리
     public class CouponMessageListener implements MessageListener {
 
         private final CouponWorker couponWorker;
@@ -49,7 +52,8 @@ public class RedisConfig {
 
         private void handleCouponRequest(String serialNumber) {
             System.out.println("handleCouponRequest 실행");
-            couponWorker.checkAndIssueCoupon(serialNumber);
+            String couponName = "할인쿠폰T";
+            couponWorker.checkAndIssueCoupon(serialNumber, couponName);
         }
     }
 }
