@@ -1,9 +1,14 @@
 package com.shop.service;
 
+import com.shop.config.DistributedLock;
+import com.shop.entity.CouponAvailable;
 import com.shop.entity.Member;
+import com.shop.repository.CouponAvailableRepository;
 import com.shop.repository.CouponRepository;
 import jakarta.transaction.Transactional;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -17,27 +22,38 @@ import com.shop.entity.Coupon;
 import com.shop.repository.MemberRepository;
 import java.util.Calendar;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import org.springframework.context.ApplicationEventPublisher;
 
 
 @Service
+@Scope("prototype")
 public class CouponWorker {
 
     private static final Logger log = LoggerFactory.getLogger(CouponWorker.class);
     private final String serialNumber;
+    private final ApplicationEventPublisher eventPublisher;
+    private RedissonClient redissonClient;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final MemberRepository memberRepository;
+    private final CouponRepository couponRepository;
+    private final CouponAvailableRepository couponAvailableRepository;
+    private final CouponDecreaseService couponDecreaseService;
 
     @Autowired
-    private RedisTemplate<String, String> redisTemplate;
+    public CouponWorker(RedissonClient redissonClient, RedisTemplate<String, String> redisTemplate,
+                        MemberRepository memberRepository, CouponRepository couponRepository,
+                        CouponAvailableRepository couponAvailableRepository, CouponDecreaseService couponDecreaseService,
+                        ApplicationEventPublisher eventPublisher) {
 
-    @Autowired
-    private MemberRepository memberRepository;
-
-    @Autowired
-    private CouponRepository couponRepository;
-
-    @Autowired
-    public CouponWorker(RedisTemplate<String, String> redisTemplate) {
         this.serialNumber = generateSerialNumber();
+        this.redissonClient = redissonClient;
         this.redisTemplate = redisTemplate;
+        this.memberRepository = memberRepository;
+        this.couponRepository = couponRepository;
+        this.couponAvailableRepository = couponAvailableRepository;
+        this.couponDecreaseService = couponDecreaseService;
+        this.eventPublisher = eventPublisher;
 
         // 자신의 일련번호를 redis에 추가
         this.redisTemplate.opsForSet().add("available_serial_numbers", this.serialNumber);
@@ -45,8 +61,8 @@ public class CouponWorker {
     }
 
     public String generateSerialNumber() {
-        // 100000 ~ 999999 범위의 랜덤 숫자 생성
-        int number = 100000 + new Random().nextInt(900000);
+        // 1000000 ~ 9999999 범위의 랜덤 숫자 생성
+        int number = 1000000 + new Random().nextInt(9000000);
         return Integer.toString(number);
     }
 
@@ -56,14 +72,14 @@ public class CouponWorker {
         if (serialNumbers != null) {
             for (String serialNumber : serialNumbers) {
                 if (redisTemplate.opsForList().size("CouponStore:" + serialNumber) > 0) {
-                    checkAndIssueCoupon(serialNumber);
+                    String couponName = "할인쿠폰T";
+                    checkAndIssueCoupon(serialNumber, couponName);
                 }
             }
         }
     }
 
-    @Transactional
-    public void checkAndIssueCoupon(String serialNumber) {
+    public void checkAndIssueCoupon(String serialNumber, String couponName) {
         log.info("checkAndIssueCoupon 메서드 호출됨.");
         try {
             System.out.println("개수 :" + redisTemplate.opsForList().size("CouponStore:" + serialNumber));
@@ -78,27 +94,47 @@ public class CouponWorker {
                     return;
                 }
 
-                // 쿠폰 생성 및 저장 로직
-                Coupon coupon = new Coupon();
-                coupon.setMember(member);
-                coupon.setCouponCode(generateCouponCode());
-                coupon.setIssuedDate(new Date());
-                Calendar calendar = Calendar.getInstance();
-                calendar.add(Calendar.DAY_OF_MONTH, 14);
-                coupon.setExpirationDate(calendar.getTime());
-                coupon.setCouponStatus("unUsed");  // 하드코딩 하는 부분
-                coupon.setCouponValue(2000.0);     // 하드코딩 하는 부분
-                coupon.setCouponName("Event");     // 하드코딩 하는 부분
+                // couponAvailable에 발급요청된 쿠폰정보가 있는지 찾기
+                CouponAvailable couponAvailable = couponAvailableRepository.findByName(couponName)
+                        .orElseThrow(() -> new IllegalArgumentException("쿠폰을 찾을 수 없습니다."));
 
-                //쿠폰을 DB에 저장하는 로직 추가
-                couponRepository.save(coupon);
+                // 쿠폰 발급
+                Coupon coupon = createAndSaveCoupon(member, couponName);
 
-                // 일련번호를 Redis Set에서 삭제
-                redisTemplate.opsForSet().remove("available_serial_numbers", CouponWorker.this.serialNumber);
+                // 쿠폰 발급 이벤트 발행 (쿠폰이 정상적으로 생성된 경우에만)
+                if (coupon != null) {
+                    couponDecreaseService.couponDecrease(couponAvailable);
+                    redisTemplate.opsForSet().remove("available_serial_numbers", this.serialNumber);
+                    CouponIssuedEvent event = new CouponIssuedEvent(this, coupon);
+                    eventPublisher.publishEvent(event);
+                }
             }
         } catch (Exception e) {
             log.error("checkAndIssueCoupon 메서드 실행 중 에러 발생", e);
         }
+    }
+
+    @Transactional
+    @DistributedLock(key = "'CouponIssueLock-' + #serialNumber", timeUnit = TimeUnit.SECONDS, waitTime = 5L, leaseTime = 3L)
+    public Coupon createAndSaveCoupon(Member member, String couponName) {
+        CouponAvailable couponAvailable = couponAvailableRepository.findByName(couponName)
+                .orElseThrow(() -> new IllegalArgumentException("해당하는 쿠폰을 찾을 수 없습니다."));
+
+        Coupon coupon = new Coupon();
+        coupon.setMember(member);
+        coupon.setCouponCode(generateCouponCode());
+        coupon.setIssuedDate(new Date());
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_MONTH, 14);
+        coupon.setExpirationDate(calendar.getTime());
+        coupon.setCouponStatus("unUsed");
+        coupon.setCouponAvailable(couponAvailable);
+        coupon.setCouponName(couponAvailable.getName());
+        coupon.setDiscountAmount(couponAvailable.getDiscountAmount());
+        coupon.setDiscountPercentage(couponAvailable.getDiscountPercentage());
+        coupon.setDiscountType(couponAvailable.getDiscountType());
+
+        return couponRepository.save(coupon);
     }
 
     private String generateCouponCode() {
@@ -114,4 +150,3 @@ public class CouponWorker {
         return code.toString();
     }
 }
-
