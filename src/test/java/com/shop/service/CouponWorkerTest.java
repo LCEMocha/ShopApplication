@@ -27,7 +27,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 @SpringBootTest
-@Transactional
+//@Transactional
 public class CouponWorkerTest {
 
     @Autowired
@@ -127,7 +127,7 @@ public class CouponWorkerTest {
         CouponAvailable persistCoupon = couponAvailableRepository.findById(couponAvailable.getId())
                 .orElseThrow(IllegalArgumentException::new);
 
-        entityManager.refresh(persistCoupon);
+        entityManager.clear();
         System.out.println(persistCoupon.getAvailableStock());
         assertThat(persistCoupon.getAvailableStock()).isZero();
         System.out.println("잔여 쿠폰 개수 = " + persistCoupon.getAvailableStock());
