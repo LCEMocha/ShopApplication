@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,13 +42,7 @@ public class CouponWorkerTest {
     @Autowired
     RedisTemplate<String, String> redisTemplate;
 
-    @Autowired
-    private CouponIssuedEventListener couponIssuedEventListener;
-
     CouponAvailable couponAvailable;
-    private CountDownLatch doneLatch;
-
-    private static final Logger logger = LoggerFactory.getLogger(CouponWorkerTest.class);
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -98,13 +94,15 @@ public class CouponWorkerTest {
         ExecutorService service = Executors.newFixedThreadPool(numberOfThreads);
         CountDownLatch readyLatch = new CountDownLatch(numberOfThreads);
         CountDownLatch startLatch = new CountDownLatch(1);
-        CountDownLatch doneLatch = new CountDownLatch(numberOfThreads);
-        CouponIssuedResultHolder status = new CouponIssuedResultHolder();
 
         List<Member> testMembers = memberRepository.findAll()
                 .stream()
                 .filter(member -> member.getEmail().startsWith("test"))
                 .toList();
+                /* 제한하고싶은 경우
+                .limit(numberOfThreads)
+                .collect(Collectors.toList());
+                 */
 
         assertThat(testMembers).hasSize(numberOfThreads);
 
@@ -130,6 +128,7 @@ public class CouponWorkerTest {
                 .orElseThrow(IllegalArgumentException::new);
 
         entityManager.refresh(persistCoupon);
+        System.out.println(persistCoupon.getAvailableStock());
         assertThat(persistCoupon.getAvailableStock()).isZero();
         System.out.println("잔여 쿠폰 개수 = " + persistCoupon.getAvailableStock());
     }

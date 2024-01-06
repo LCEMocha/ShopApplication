@@ -25,11 +25,20 @@ public class CouponDecreaseService {
     private static final int MAX_RETRY = 5;
 
     @DistributedLock(key = "'CountDecreaseLock-' + #serialNumber", timeUnit = TimeUnit.SECONDS, waitTime = 5L, leaseTime = 3L)
-    public void couponDecrease(CouponAvailable couponAvailable) {
-        couponAvailable = couponAvailableRepository.findById(couponAvailable.getId())
-                .orElseThrow(() -> new IllegalStateException("Coupon not found"));
-        couponAvailable.decrease();
+    public boolean couponDecrease(CouponAvailable couponAvailable) {
+        try {
+            couponAvailable = couponAvailableRepository.findById(couponAvailable.getId())
+                    .orElseThrow(() -> new IllegalStateException("Coupon not found"));
 
+            couponAvailable.decrease();
+            couponAvailableRepository.save(couponAvailable);
+            System.out.println(couponAvailable.getAvailableStock());
+            return true;
+
+        } catch (Exception e) {
+            System.out.println("Error in couponDecrease: " + e.getMessage());
+            return false;
+        }
         /*
         int retryCount = 0;
         boolean success = false;

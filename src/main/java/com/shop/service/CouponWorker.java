@@ -98,15 +98,18 @@ public class CouponWorker {
                 CouponAvailable couponAvailable = couponAvailableRepository.findByName(couponName)
                         .orElseThrow(() -> new IllegalArgumentException("쿠폰을 찾을 수 없습니다."));
 
-                // 쿠폰 발급
-                Coupon coupon = createAndSaveCoupon(member, couponName);
+                // 쿠폰 재고 감소 시도
+                boolean decreaseSuccessful = couponDecreaseService.couponDecrease(couponAvailable);
+                if (decreaseSuccessful) {
+                    // 쿠폰 발급
+                    Coupon coupon = createAndSaveCoupon(member, couponName);
 
-                // 쿠폰 발급 이벤트 발행 (쿠폰이 정상적으로 생성된 경우에만)
-                if (coupon != null) {
-                    couponDecreaseService.couponDecrease(couponAvailable);
-                    redisTemplate.opsForSet().remove("available_serial_numbers", this.serialNumber);
-                    CouponIssuedEvent event = new CouponIssuedEvent(this, coupon);
-                    eventPublisher.publishEvent(event);
+                    // 쿠폰 발급 이벤트 발행 (쿠폰이 정상적으로 생성된 경우에만)
+                    if (coupon != null) {
+                        redisTemplate.opsForSet().remove("available_serial_numbers", this.serialNumber);
+                        CouponIssuedEvent event = new CouponIssuedEvent(this, coupon);
+                        eventPublisher.publishEvent(event);
+                    }
                 }
             }
         } catch (Exception e) {
@@ -135,6 +138,7 @@ public class CouponWorker {
         coupon.setDiscountType(couponAvailable.getDiscountType());
 
         return couponRepository.save(coupon);
+
     }
 
     private String generateCouponCode() {
