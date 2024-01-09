@@ -21,7 +21,7 @@ public class CouponCreationController {
     @PostMapping("/create")
     public ResponseEntity<?> createCoupon(String name, Long availableStock, Double discountAmount, Double discountPercentage, String discountType) {
         couponCreationService.createAndSaveCoupon(name, availableStock, discountAmount, discountPercentage, discountType);
-        return ResponseEntity.ok("쿠폰 생성 완료");
+        return ResponseEntity.ok("쿠폰 발급 요청함");
     }
 
 }

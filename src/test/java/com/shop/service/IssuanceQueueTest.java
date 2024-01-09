@@ -30,7 +30,7 @@ import jakarta.persistence.PersistenceContext;
 
 @SpringBootTest
 //@Transactional
-public class CouponWorkerTest {
+public class IssuanceQueueTest {
 
     //@Autowired
     //private CouponController couponController;
@@ -57,77 +57,57 @@ public class CouponWorkerTest {
         couponAvailable = couponAvailableRepository.findByName("할인쿠폰T")
                 .orElseThrow(() -> new IllegalArgumentException("해당 쿠폰을 찾을 수 없습니다."));
 
-        /**
-        couponAvailable = new CouponAvailable("할인쿠폰T", 100L, null, 20D, "percentage");
-        couponAvailableRepository.save(couponAvailable);
-
-
-        PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
-
-        // 회원100명만들기
-        for (int i = 0; i < 100; i++) {
-            MemberFormDto memberFormDto = new MemberFormDto();
-            String uniqueEmail = "test" + i + "@example.com";
-            memberFormDto.setName("TestName" + i);
-            memberFormDto.setEmail(uniqueEmail);
-            memberFormDto.setAddress("TestAddress" + i);
-            memberFormDto.setPassword("TestPassword" + i);
-
-            Member member = Member.createMember(memberFormDto, passwordEncoder);
-            memberRepository.save(member);
-        }
-         **/
-
     }
 
-
-    /**
-     * Feature: 쿠폰 차감 동시성 테스트
-     * Background
-     *     Given 할인쿠폰T 라는 이름의 쿠폰 100장이 등록되어 있음
-     * <p>
-     * Scenario: 100장의 쿠폰을 100명의 사용자가 동시에 접근해 발급 요청함
-     *           Lock의 이름은 쿠폰명으로 설정함
-     * <p>
-     * Then 사용자들의 요청만큼 정확히 쿠폰의 개수가 차감되어야 함
-     */
-
     @Test
-    @Rollback(true)
-    void 쿠폰차감_분산락_적용_동시성100명_테스트() throws InterruptedException {
-        int numberOfThreads = 100;
-        ExecutorService service = Executors.newFixedThreadPool(numberOfThreads);
-        CountDownLatch readyLatch = new CountDownLatch(numberOfThreads);
-        CountDownLatch startLatch = new CountDownLatch(1);
+    //@Rollback(true)
+    void 부하분산_테스트() throws InterruptedException {
+        int numberOfThreads = 1000;
+        int batchSize = 100;
+        ExecutorService service = Executors.newFixedThreadPool(batchSize);
+        CountDownLatch endLatch = new CountDownLatch(numberOfThreads / batchSize);
 
         List<Member> testMembers = memberRepository.findAll()
                 .stream()
                 .filter(member -> member.getEmail().startsWith("test"))
                 .toList();
-                /* 제한하고싶은 경우
-                .limit(numberOfThreads)
-                .collect(Collectors.toList());
-                 */
 
-        assertThat(testMembers).hasSize(numberOfThreads);
+        assertThat(testMembers).hasSize(100);
 
-        for (Member member : testMembers) {
-            service.execute(() -> {
-                Principal mockPrincipal = () -> member.getEmail();
-                readyLatch.countDown();
-                try {
-                    startLatch.await();
-                    issuanceQueue.addRequest(mockPrincipal);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
+        List<Member> duplicatedTestMembers = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            duplicatedTestMembers.addAll(testMembers);
         }
 
-        readyLatch.await();
-        startLatch.countDown();
+        assertThat(duplicatedTestMembers).hasSize(numberOfThreads);
 
-        Thread.sleep(15000);
+        for (int i = 0; i < numberOfThreads; i += batchSize) {
+            CountDownLatch startLatch = new CountDownLatch(1);
+            for (int j = 0; j < batchSize; j++) {
+                Member member = duplicatedTestMembers.get(i + j);
+                service.execute(() -> {
+                    Principal mockPrincipal = () -> member.getEmail();
+                    try {
+                        startLatch.await();
+                        issuanceQueue.addRequest(mockPrincipal);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+
+            // 이 그룹의 스레드가 모두 시작할 준비가 되면, 동시에 시작
+            startLatch.countDown();
+
+            // 다음 배치를 처리하기 전에 잠시 대기 (IssuanceQueue의 처리 간격과 일치)
+            Thread.sleep(3000);
+
+            // 이 배치의 처리 완료
+            endLatch.countDown();
+        }
+
+        endLatch.await();
+        service.shutdown();
 
         CouponAvailable persistCoupon = couponAvailableRepository.findById(couponAvailable.getId())
                 .orElseThrow(IllegalArgumentException::new);
