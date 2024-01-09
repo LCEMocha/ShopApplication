@@ -35,11 +35,11 @@ public class CouponController {
     private ApplicationContext applicationContext;
 
     @PostMapping("/request")
-    public ResponseEntity<Object> requestCoupon(Principal principal) {
+    public ResponseEntity<Object> requestCoupon(String email) {
         try {
             CouponWorker couponWorker = applicationContext.getBean(CouponWorker.class);
 
-            String email = SecurityUtils.getEmailFromPrincipal(principal);
+            //String email = SecurityUtils.getEmailFromPrincipal(principal);
 
             // Redis Set에서 일련번호를 랜덤하게 선택
             String serialNumber = selectRandomSerialNumber();

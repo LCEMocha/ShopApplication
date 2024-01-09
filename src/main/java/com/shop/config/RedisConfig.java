@@ -1,6 +1,7 @@
 package com.shop.config;
 
 import com.shop.service.CouponWorker;
+import io.lettuce.core.api.StatefulRedisConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.stereotype.Component;
+import io.lettuce.core.RedisClient;
 
 
 @Configuration
@@ -24,6 +26,12 @@ public class RedisConfig {
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
+    @Bean
+    public StatefulRedisConnection<String, String> redisConnection() {
+        RedisClient redisClient = RedisClient.create("redis://localhost:6379");
+
+        return redisClient.connect();
+    }
 
     @Bean
         // Redis 커넥션 팩토리를 사용하여 메시지 리스너 등록, CouponIssuance 채널 구독하도록 설정
