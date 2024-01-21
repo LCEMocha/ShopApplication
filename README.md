@@ -41,7 +41,10 @@
   8. 7번에서 가져온 쿠폰데이터를 조회하여 해당 쿠폰 재고수량을 확인하고, 재고가 있으면 1개를 차감한 뒤 Main DB(MySQL)에 쿠폰정보를 INSERT하여 발급 처리를 완료합니다.
  
 * 분산락을 사용하여 비동기 처리과정에서 DB수정 시 충돌이 일어나지 않도록 방지하였습니다.
-
+* [CouponWorker 코드](https://github.com/LCEMocha/ShopApplication/blob/master/src/main/java/com/shop/service/CouponWorker.java)
+* [Coupon 발행 Controller 코드](https://github.com/LCEMocha/ShopApplication/blob/master/src/main/java/com/shop/controller/CouponController.java)
+* [redis 설정](https://github.com/LCEMocha/ShopApplication/blob/master/src/main/java/com/shop/config/RedisConfig.java)
+* [분산락 설정](https://github.com/LCEMocha/ShopApplication/blob/master/src/main/java/com/shop/config/DistributedLock.java)
 
 ### 2. 대기열 구현
 * 우아한Tech 유튜브 참고
@@ -49,6 +52,7 @@
   
   ![image](https://github.com/LCEMocha/ShopApplication/assets/142338641/c75313b7-c19a-4530-927e-994c39ea4e42)
 * 1000개의 스레드에서 동시에 쿠폰 발급을 요청하는 테스트코드를 통과하였습니다.
+* [대기열 구현 코드](https://github.com/LCEMocha/ShopApplication/blob/master/src/main/java/com/shop/controller/IssuanceQueue.java)
 
 
 ### 3. Kafka를 이용한 상담원 채팅 기능(예정)
