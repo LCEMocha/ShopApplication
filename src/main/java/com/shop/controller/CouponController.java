@@ -34,7 +34,6 @@ public class CouponController {
     @Autowired
     private ApplicationContext applicationContext;
 
-    @PostMapping("/request")
     public ResponseEntity<Object> requestCoupon(String email) {
         try {
             CouponWorker couponWorker = applicationContext.getBean(CouponWorker.class);
@@ -48,18 +47,18 @@ public class CouponController {
             if (serialNumber == null) {
                 serialNumber = couponWorker.generateSerialNumber();
                 redisTemplate.opsForSet().add("available_serial_numbers", serialNumber); // 새 일련번호를 Redis Set에 추가
-                log.info("New serial number generated: {}", serialNumber);
+                log.info("serial number 생성: {}", serialNumber);
             } else {
-                log.info("Serial number selected: {}", serialNumber);
+                log.info("serial number 선택: {}", serialNumber);
             }
 
             redisTemplate.convertAndSend("CouponIssuance", serialNumber);
             // 고객 쿠폰 발급 데이터 RPush
             redisTemplate.opsForList().rightPush("CouponStore:" + serialNumber, email);
-            log.info("Coupon request published to channel and saved to list with serial number: {}", serialNumber);
+            log.info("쿠폰 요청 및 일련번호 저장됨: {}", serialNumber);
             return ResponseEntity.ok("쿠폰 발급 요청 성공");
         } catch (Exception e) {
-            log.error("Error during coupon request: ", e);
+            log.error("쿠폰발급 요청 중 에러 발생: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("쿠폰 발급 요청 실패");
         }
 

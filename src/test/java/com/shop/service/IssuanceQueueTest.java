@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import org.slf4j.Logger;
@@ -60,54 +60,34 @@ public class IssuanceQueueTest {
     }
 
     @Test
-    //@Rollback(true)
     void 부하분산_테스트() throws InterruptedException {
         int numberOfThreads = 1000;
-        int batchSize = 100;
-        ExecutorService service = Executors.newFixedThreadPool(batchSize);
-        CountDownLatch endLatch = new CountDownLatch(numberOfThreads / batchSize);
-
+        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
+        CountDownLatch readyLatch = new CountDownLatch(numberOfThreads);
+        CountDownLatch startLatch = new CountDownLatch(1);
         List<Member> testMembers = memberRepository.findAll()
                 .stream()
                 .filter(member -> member.getEmail().startsWith("test"))
                 .toList();
 
-        assertThat(testMembers).hasSize(100);
+        assertThat(testMembers).hasSize(numberOfThreads);
 
-        List<Member> duplicatedTestMembers = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            duplicatedTestMembers.addAll(testMembers);
-        }
-
-        assertThat(duplicatedTestMembers).hasSize(numberOfThreads);
-
-        for (int i = 0; i < numberOfThreads; i += batchSize) {
-            CountDownLatch startLatch = new CountDownLatch(1);
-            for (int j = 0; j < batchSize; j++) {
-                Member member = duplicatedTestMembers.get(i + j);
-                service.execute(() -> {
-                    Principal mockPrincipal = () -> member.getEmail();
+        for (Member member : testMembers) {
+            executorService.execute(() -> {
+                Principal mockPrincipal = member::getEmail;
+                readyLatch.countDown();
                     try {
                         startLatch.await();
                         issuanceQueue.addRequest(mockPrincipal);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                });
-            }
-
-            // 이 그룹의 스레드가 모두 시작할 준비가 되면, 동시에 시작
-            startLatch.countDown();
-
-            // 다음 배치를 처리하기 전에 잠시 대기 (IssuanceQueue의 처리 간격과 일치)
-            Thread.sleep(3000);
-
-            // 이 배치의 처리 완료
-            endLatch.countDown();
+            });
         }
 
-        endLatch.await();
-        service.shutdown();
+        readyLatch.await();
+        startLatch.countDown();
+        executorService.awaitTermination(4, TimeUnit.MINUTES);
 
         CouponAvailable persistCoupon = couponAvailableRepository.findById(couponAvailable.getId())
                 .orElseThrow(IllegalArgumentException::new);

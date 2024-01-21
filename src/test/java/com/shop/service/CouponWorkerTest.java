@@ -87,7 +87,7 @@ public class CouponWorkerTest {
      *     Given 할인쿠폰T 라는 이름의 쿠폰 100장이 등록되어 있음
      * <p>
      * Scenario: 100장의 쿠폰을 100명의 사용자가 동시에 접근해 발급 요청함
-     *           Lock의 이름은 쿠폰명으로 설정함
+     *
      * <p>
      * Then 사용자들의 요청만큼 정확히 쿠폰의 개수가 차감되어야 함
      */
@@ -103,11 +103,8 @@ public class CouponWorkerTest {
         List<Member> testMembers = memberRepository.findAll()
                 .stream()
                 .filter(member -> member.getEmail().startsWith("test"))
-                .toList();
-                /* 제한하고싶은 경우
                 .limit(numberOfThreads)
                 .collect(Collectors.toList());
-                 */
 
         assertThat(testMembers).hasSize(numberOfThreads);
 

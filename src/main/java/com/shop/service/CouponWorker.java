@@ -90,7 +90,7 @@ public class CouponWorker {
                 Member member = memberRepository.findByEmail(couponData);
                 System.out.println("email 서치 중: " + couponData);
                 if (member == null) {
-                    log.error("No member found with email: {}", couponData);
+                    log.error("해당 email을 가진 회원이 존재하지 않습니다: {}", couponData);
                     return;
                 }
 
