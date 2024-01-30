@@ -50,7 +50,7 @@
 
 ### 2. 대기열 구현
 * 우아한Tech 유튜브 참고 : https://www.youtube.com/watch?v=MTSn93rNPPE
-* 기준 시간(쿠폰이 출시된 시간)으로부터 고객의 요청까지 걸린 시간을 점수화하여 선착순 순서를 부여합니다.
+* 기준 시간(쿠폰이 출시된 시간)으로부터 고객의 요청까지 걸린 시간을 점수화(ZADD)하여 선착순 순서를 부여(ZRANK)합니다.
 * 노트북 
   
   ![image](https://github.com/LCEMocha/ShopApplication/assets/142338641/c75313b7-c19a-4530-927e-994c39ea4e42)
