@@ -20,10 +20,10 @@
 
 ## 🔑 주요 구현
 ### 1. Redis Pub/Sub을 활용한 쿠폰 발급 비동기 처리
-* 올리브영 테크블로그 참고
-* 처리속도가 빠른 인-메모리 데이터 스토어라는 특성을 가진 Redis를 사용하여, 동시다발적으로 발생하는 실시간 쿠폰발급 요청을 빠르고 안정적으로 처리하도록 구현하였습니다.
-* 네트워크 부하를 최소화
-* <https://oliveyoung.tech/blog/2023-08-07/async-process-of-coupon-issuance-using-redis/>
+* 올리브영 테크블로그 참고 : <https://oliveyoung.tech/blog/2023-08-07/async-process-of-coupon-issuance-using-redis/>
+* 동시다발적으로 발생하는 실시간 쿠폰발급 요청을 빠르고 안정적으로 처리하도록 구현하였습니다.
+* 요청을 비동기적으로 처리하여 빠르고, Redis의 '인-메모리 데이터 스토어'라는 특성을 이용하여 처리 속도 향상과 동시에 DB에 부하를 줄였습니다.
+* 
   ![image](https://github.com/LCEMocha/ShopApplication/assets/142338641/1ad8dea7-37b1-4eea-8be6-8e9376780614)
   
   1. 쿠폰 발급 Worker가 구동되면 'CouponIssuance' 이라는 Redis Topic에 대한 '일련번호'가 생성됩니다.
@@ -49,8 +49,9 @@
 * [분산락 설정](https://github.com/LCEMocha/ShopApplication/blob/master/src/main/java/com/shop/config/DistributedLock.java)
 
 ### 2. 대기열 구현
-* 우아한Tech 유튜브 참고
-* https://www.youtube.com/watch?v=MTSn93rNPPE
+* 우아한Tech 유튜브 참고 : https://www.youtube.com/watch?v=MTSn93rNPPE
+* 기준 시간(쿠폰이 출시된 시간)으로부터 고객의 요청까지 걸린 시간을 점수화하여 선착순 순서를 부여합니다.
+* 노트북 
   
   ![image](https://github.com/LCEMocha/ShopApplication/assets/142338641/c75313b7-c19a-4530-927e-994c39ea4e42)
 * 1000개의 스레드에서 동시에 쿠폰 발급을 요청하는 테스트코드를 통과하였습니다.
