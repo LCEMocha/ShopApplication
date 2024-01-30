@@ -21,9 +21,11 @@
 ## 🔑 주요 구현
 ### 1. Redis Pub/Sub을 활용한 쿠폰 발급 비동기 처리
 * 올리브영 테크블로그 참고
+* 처리속도가 빠른 인-메모리 데이터 스토어라는 특성을 가진 Redis를 사용하여, 동시다발적으로 발생하는 실시간 쿠폰발급 요청을 빠르고 안정적으로 처리하도록 구현하였습니다.
+* 네트워크 부하를 최소화
 * <https://oliveyoung.tech/blog/2023-08-07/async-process-of-coupon-issuance-using-redis/>
   ![image](https://github.com/LCEMocha/ShopApplication/assets/142338641/1ad8dea7-37b1-4eea-8be6-8e9376780614)
-
+  
   1. 쿠폰 발급 Worker가 구동되면 'CouponIssuance' 이라는 Redis Topic에 대한 '일련번호'가 생성됩니다.
   2. 일련번호가 결정되면, CouponIssuance topic에 이 일련번호를 publish 합니다.
   3. 주기적으로 'CouponStore' List의 크기가 0보다 큰지 확인하고, 0보다 크면 List에서 데이터를 Pop 하여 쿠폰을 발급하는 프로세스가 실행됩니다
