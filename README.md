@@ -51,7 +51,7 @@
 ### 2. 대기열 구현
 * 우아한Tech 유튜브 참고 : https://www.youtube.com/watch?v=MTSn93rNPPE
 * 기준 시간(쿠폰이 출시된 시간)으로부터 고객의 요청까지 걸린 시간을 점수화(ZADD)하여 선착순 순서를 부여(ZRANK)합니다.
-* 노트북 
+* 5초에 한번씩, 대기열의 상위 200명을 참가열(쿠폰발급 서비스로직 시작)로 옮겨줍니다.  
   
   ![image](https://github.com/LCEMocha/ShopApplication/assets/142338641/c75313b7-c19a-4530-927e-994c39ea4e42)
 * 1000개의 스레드에서 동시에 쿠폰 발급을 요청하는 테스트코드를 통과하였습니다.
