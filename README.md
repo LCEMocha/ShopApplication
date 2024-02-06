@@ -23,7 +23,7 @@
 * 올리브영 테크블로그 참고 : <https://oliveyoung.tech/blog/2023-08-07/async-process-of-coupon-issuance-using-redis/>
 * 동시다발적으로 발생하는 실시간 쿠폰발급 요청을 빠르고 안정적으로 처리하도록 구현
 * 요청을 비동기적으로 처리하여 빠르고, Redis의 '인-메모리 데이터 스토어'라는 특성을 이용하여 처리 속도 향상과 동시에 DB에 부하를 줄임
-* pub/sub의 단순한 구조상 메시지 전송이 100% 보장되지 않으므로, 쿠폰 발급 데이터의 유실을 막기 위해 Redis에서 제공하는 List 자료구조를 활용하여 안정적 
+* pub/sub의 단순한 구조상 메시지 전송이 100% 보장되지 않으므로, 쿠폰 발급 데이터의 유실을 막기 위해 Redis에서 제공하는 List 자료구조를 추가로 활용하여 안정적 
   ![image](https://github.com/LCEMocha/ShopApplication/assets/142338641/1ad8dea7-37b1-4eea-8be6-8e9376780614)
   
   1. 쿠폰 발급 Worker가 구동되면 '쿠폰발급(CouponIssuance)' 이라는 Redis Topic에 대한 '일련번호'가 생성됩니다.
