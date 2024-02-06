@@ -21,15 +21,15 @@
 ## 🔑 주요 구현
 ### 1. Redis Pub/Sub을 활용한 쿠폰 발급 비동기 처리
 * 올리브영 테크블로그 참고 : <https://oliveyoung.tech/blog/2023-08-07/async-process-of-coupon-issuance-using-redis/>
-* 동시다발적으로 발생하는 실시간 쿠폰발급 요청을 빠르고 안정적으로 처리하도록 구현하였습니다.
-* 요청을 비동기적으로 처리하여 빠르고, Redis의 '인-메모리 데이터 스토어'라는 특성을 이용하여 처리 속도 향상과 동시에 DB에 부하를 줄였습니다.
-* 
+* 동시다발적으로 발생하는 실시간 쿠폰발급 요청을 빠르고 안정적으로 처리하도록 구현
+* 요청을 비동기적으로 처리하여 빠르고, Redis의 '인-메모리 데이터 스토어'라는 특성을 이용하여 처리 속도 향상과 동시에 DB에 부하를 줄임
+* pub/sum의 단순한 구조상 메시지 전송이 100% 보장되지 않으므로, 쿠폰 발급 데이터의 유실을 막기 위해 Redis에서 제공하는 List 자료구조를 활용하여 안정적 
   ![image](https://github.com/LCEMocha/ShopApplication/assets/142338641/1ad8dea7-37b1-4eea-8be6-8e9376780614)
   
-  1. 쿠폰 발급 Worker가 구동되면 'CouponIssuance' 이라는 Redis Topic에 대한 '일련번호'가 생성됩니다.
+  1. 쿠폰 발급 Worker가 구동되면 '쿠폰발급(CouponIssuance)' 이라는 Redis Topic에 대한 '일련번호'가 생성됩니다.
   2. 일련번호가 결정되면, CouponIssuance topic에 이 일련번호를 publish 합니다.
-  3. 주기적으로 'CouponStore' List의 크기가 0보다 큰지 확인하고, 0보다 크면 List에서 데이터를 Pop 하여 쿠폰을 발급하는 프로세스가 실행됩니다
-     (모종의 이유로, 요청을 받고도 미발급된 쿠폰이 있을 것을 방지).
+  3. 주기적으로 '쿠폰 발급 저장소(CouponStore)' List의 크기가 0보다 큰지 확인하고, 0보다 크면 List에서 데이터를 Pop 하여 쿠폰을 발급하는 프로세스가 실행됩니다
+     (쿠폰 발급 데이터 유실 방지).
 
   위의 1-3번 과정은 기본 구성요소와 초기 설정이므로, 쿠폰 발급을 위해 기본적으로 미리 실행되어 있어야 합니다.
   아래 4-8번 과정은 실제 사용자가 쿠폰 발급을 요청했을 때 어떤 흐름으로 동작하는지 설명합니다.
@@ -37,9 +37,9 @@
   4. 고객이 쿠폰 발급을 요청합니다.
   5. CouponController는 이 요청을 받고 Worker들이 가지고 있는 일련번호 중 1개를 골라서 CouponIssuance topic에 publish 합니다.
      CouponMessageListener는 이 채널을 subscribe하고 있으므로, 이를 감지합니다.
-  6. 쿠폰을 요청한 사용자정보(email)와 쿠폰 일련번호를 CouponStore에 Rpush합니다. 이를 통해 발급 대기 중인 쿠폰 요청이 순차적으로 관리됩니다.
-  7. 5번의 과정으로 CouponMessageListener는 handleCouponRequest를 호출하여 실제 쿠폰 처리 로직을 수행합니다.
-     checkAndIssueCoupon 메서드는 CouponStore 리스트에서 해당 일련번호를 가진 쿠폰 발급 요청 데이터를 찾습니다(Lpop).
+  6. 쿠폰을 요청한 사용자정보(email)와 쿠폰 일련번호를 쿠폰 발급 저장소에 Rpush합니다. 이를 통해 발급 대기 중인 쿠폰 요청이 순차적으로 관리됩니다.
+  7. 5번의 과정으로 CouponMessageListener는 쿠폰발급 처리 로직이 구현된 메서드를 호출합니다.
+     호출된 쿠폰발급 처리 메서드(checkAndIssueCoupon)는 쿠폰 저장소 리스트에서 해당 일련번호를 가진 쿠폰 발급 요청 데이터를 찾습니다(Lpop).
   8. 7번에서 가져온 쿠폰데이터를 조회하여 해당 쿠폰 재고수량을 확인하고, 재고가 있으면 1개를 차감한 뒤 Main DB(MySQL)에 쿠폰정보를 INSERT하여 발급 처리를 완료합니다.
  
 * 분산락을 사용하여 비동기 처리과정에서 DB수정 시 충돌이 일어나지 않도록 방지하였습니다.
