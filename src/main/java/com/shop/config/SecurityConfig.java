@@ -72,6 +72,7 @@ public class SecurityConfig {
                 .requestMatchers(antMatcher("/item/**")).permitAll()
                 .requestMatchers(antMatcher("/item/**")).permitAll()
                 .requestMatchers(antMatcher("/chat")).permitAll()
+                //.requestMatchers(antMatcher("/chat")).hasRole("ADMIN")
                 .requestMatchers(antMatcher("/admin/**")).hasRole("ADMIN")
                 .requestMatchers(antMatcher("/oauth2/authorization/**")).permitAll()
                 .anyRequest().authenticated() //설정한 경로를 제외한 나머지 경로들은 모두 인증을 요구하도록 설정한다.
