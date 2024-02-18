@@ -1,31 +1,22 @@
 package com.shop.service;
 
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Component;
 
-import java.util.Properties;
+@Slf4j
+@Component
+public class KafkaProducerService {
 
-public class KafkaProducerService implements Runnable {
-    private final KafkaProducer<String, String> producer;
-    private final String topic;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
-    public KafkaProducerService(Properties props, String topic) {
-        this.producer = new KafkaProducer<>(props);
-        this.topic = topic;
+    public KafkaProducerService(KafkaTemplate<String, String> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
     }
 
-    @Override
-    public void run() {
-        // 채팅 메시지 전송
-        // 리스트나 큐 사용
-    }
-
-    // 채팅 메시지 추가
-    public void sendMessage(String message) {
-        producer.send(new ProducerRecord<>(topic, message));
-    }
-
-    public void close() {
-        producer.close();
+    public void produceMessage(String topic, String payload) {
+        //log.info("Producer TOPIC : " + topic);
+        //log.info("Producer PAYLOAD : " + payload);
+        kafkaTemplate.send(topic, payload);
     }
 }

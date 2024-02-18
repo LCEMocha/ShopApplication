@@ -39,25 +39,5 @@ public class CouponDecreaseService {
             System.out.println("Error in couponDecrease: " + e.getMessage());
             return false;
         }
-        /*
-        int retryCount = 0;
-        boolean success = false;
-
-        while (!success && retryCount < MAX_RETRY) {
-            try {
-                couponAvailable = couponAvailableRepository.findById(couponAvailable.getId())
-                        .orElseThrow(() -> new IllegalStateException("Coupon not found"));
-
-                // 비관적 락 적용
-                entityManager.lock(couponAvailable, LockModeType.PESSIMISTIC_WRITE);
-
-                couponAvailable.decrease();
-                couponAvailableRepository.saveAndFlush(couponAvailable);
-                success = true;
-            } catch (PersistenceException e) {
-                retryCount++;
-            }
-        }
-        */
     }
 }
