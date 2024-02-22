@@ -38,13 +38,11 @@
                     <a class="nav-link" href="/members/logout">로그아웃</a>
                 </li>
                 <li class="nav-item" sec:authorize="isAuthenticated() or isAnonymous()">
-                    <a class="nav-link" href="/chat">상담원 채팅</a>
+                    <a class="nav-link" href="/chat/user">상담원 채팅</a>
                 </li>
-                <!--
                 <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_ADMIN')">
-                    <a class="nav-link" href="/agentChat">상담원 채팅</a>
+                    <a class="nav-link" href="/chat/master">고객상담 채팅</a>
                 </li>
-                -->
 
             </ul>
             <form class="form-inline my-2 my-lg-0" th:action="@{/}" method="get">
