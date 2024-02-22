@@ -37,7 +37,7 @@ public class IssuanceQueue {
 
     @Scheduled(fixedDelay = 5000)
     public void processQueue() {
-        long size = 200;
+        long size = 150;
         var userIds = redisCommands.zrange("eventQueue", 0, size - 1);
         userIds.forEach(couponController::requestCoupon);
         redisCommands.zremrangebyrank("eventQueue", 0, size - 1);
