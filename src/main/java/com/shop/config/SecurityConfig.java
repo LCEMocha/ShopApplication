@@ -66,13 +66,16 @@ public class SecurityConfig {
                 //admin으로 시작하는 경로는 해당 계정이 ADMIN Role일 때만 접근 가능하도록 설정한다.
                 .requestMatchers(antMatcher("/css/**")).permitAll()
                 .requestMatchers(antMatcher("/js/**")).permitAll()
+                .requestMatchers(antMatcher("/chat/js/**")).permitAll()
+                .requestMatchers(antMatcher("/chat/ws/**")).permitAll()
+                .requestMatchers("/favicon.ico").permitAll()
                 .requestMatchers(antMatcher("/img/**")).permitAll()
                 .requestMatchers(antMatcher("/")).permitAll()
                 .requestMatchers(antMatcher("/members/**")).permitAll()
                 .requestMatchers(antMatcher("/item/**")).permitAll()
                 .requestMatchers(antMatcher("/item/**")).permitAll()
-                .requestMatchers(antMatcher("/chat/user/**")).permitAll()
-                .requestMatchers(antMatcher("/chat/master/**")).hasRole("ADMIN")
+                .requestMatchers(antMatcher("/chat/guest")).permitAll()
+                .requestMatchers(antMatcher("/chat/master")).hasRole("ADMIN")
                 .requestMatchers(antMatcher("/admin/**")).hasRole("ADMIN")
                 .requestMatchers(antMatcher("/oauth2/authorization/**")).permitAll()
                 .anyRequest().authenticated() //설정한 경로를 제외한 나머지 경로들은 모두 인증을 요구하도록 설정한다.
