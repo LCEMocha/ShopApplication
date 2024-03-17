@@ -13,6 +13,7 @@
 * MySQL
 * Redis
 * Kafka
+* Docker
 
 ## 💻 ERD
 ![ERD](https://github.com/LCEMocha/ShopApplication/assets/142338641/74ca2446-da9c-4028-95c8-176674096dc9)
