@@ -69,6 +69,7 @@
 
 ![image](https://github.com/LCEMocha/ShopApplication/assets/142338641/bc0c2533-725a-42d9-8956-77c354ab40b5)
 
+### 4. Docker 컨테이너를 이용하여 EC2 인스턴스에 배포
 
 
 
