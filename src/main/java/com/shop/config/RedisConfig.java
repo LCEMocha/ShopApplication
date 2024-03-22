@@ -5,15 +5,18 @@ import io.lettuce.core.api.StatefulRedisConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Component;
 import io.lettuce.core.RedisClient;
 
@@ -23,13 +26,34 @@ public class RedisConfig {
 
     private static final Logger log = LoggerFactory.getLogger(RedisConfig.class);
 
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
+    @Value("${spring.redis.host}")
+    private String host;
 
+    @Value("${spring.redis.port}")
+    private int port;
+
+    /**
+     * 내장 혹은 외부의 Redis를 연결
+     */
     @Bean
-    public StatefulRedisConnection<String, String> redisConnection() {
-        RedisClient redisClient = RedisClient.create("redis://localhost:6379");
+    public RedisConnectionFactory redisConnectionFactory(){
+        return new LettuceConnectionFactory(host, port);
+    }
 
+    /**
+     * RedisConnection에서 넘겨준 byte 값 객체 직렬화
+     */
+    @Bean
+    public RedisTemplate<?,?> redisTemplate(){
+        RedisTemplate<byte[], byte[]> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        return redisTemplate;
+    }
+
+    @Bean(destroyMethod = "close")
+    public StatefulRedisConnection<String, String> statefulRedisConnection() {
+        RedisClient redisClient = RedisClient.create("redis://" + host + ":" + port);
         return redisClient.connect();
     }
 

@@ -43,7 +43,7 @@ public class SecurityConfig {
                 .cors(withDefaults())
                 .formLogin()
                 .loginPage("/members/login")
-                .defaultSuccessUrl("http://localhost:8080/")
+                .defaultSuccessUrl("/")
                 .usernameParameter("email")
                 .failureUrl("/members/login/error")
                 .and()
@@ -54,7 +54,7 @@ public class SecurityConfig {
 
         http.oauth2Login()
                 //.loginPage("/oauth2/authorization/google") //Google 로그인 페이지로 리다이렉트
-                .defaultSuccessUrl("http://localhost:8080/")
+                .defaultSuccessUrl("/")
                 .failureUrl("/loginFailure")
                 .userInfoEndpoint()
                 .userService(customOAuth2UserService)
@@ -72,7 +72,6 @@ public class SecurityConfig {
                 .requestMatchers(antMatcher("/img/**")).permitAll()
                 .requestMatchers(antMatcher("/")).permitAll()
                 .requestMatchers(antMatcher("/members/**")).permitAll()
-                .requestMatchers(antMatcher("/item/**")).permitAll()
                 .requestMatchers(antMatcher("/item/**")).permitAll()
                 .requestMatchers(antMatcher("/chat/guest")).permitAll()
                 .requestMatchers(antMatcher("/chat/master")).hasRole("ADMIN")
