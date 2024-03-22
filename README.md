@@ -51,7 +51,7 @@
 * [redis 설정](https://github.com/LCEMocha/ShopApplication/blob/master/src/main/java/com/shop/config/RedisConfig.java)
 * [분산락 설정](https://github.com/LCEMocha/ShopApplication/blob/master/src/main/java/com/shop/config/DistributedLock.java)
 
-### 2. 대기열 구현
+### 2. Redis Sorted Set 이용한 대기열 구현
 * 우아한Tech 유튜브 참고 : https://www.youtube.com/watch?v=MTSn93rNPPE
 * 기준 시간(쿠폰이 출시된 시간)으로부터 고객의 요청까지 걸린 시간을 점수화(ZADD)하여 선착순 순서를 부여(ZRANK)
 * 5초에 한번씩, 대기열의 상위 200명을 참가열(쿠폰발급 서비스로직 시작)로 전송
