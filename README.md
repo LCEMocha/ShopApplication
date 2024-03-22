@@ -56,7 +56,7 @@
 * 기준 시간(쿠폰이 출시된 시간)으로부터 고객의 요청까지 걸린 시간을 점수화(ZADD)하여 선착순 순서를 부여(ZRANK)
 * 5초에 한번씩, 대기열의 상위 200명을 참가열(쿠폰발급 서비스로직 시작)로 전송
   
-  <img src="https://github.com/LCEMocha/ShopApplication/assets/142338641/c75313b7-c19a-4530-927e-994c39ea4e42" width="200" height="400"/>
+  <img src="https://github.com/LCEMocha/ShopApplication/assets/142338641/c75313b7-c19a-4530-927e-994c39ea4e42" width="800" height="400"/>
 * 1000개의 스레드에서 동시에 쿠폰 발급을 요청하는 테스트코드를 통과하였습니다.
 * [대기열 구현 코드](https://github.com/LCEMocha/ShopApplication/blob/master/src/main/java/com/shop/controller/IssuanceQueue.java)
 
