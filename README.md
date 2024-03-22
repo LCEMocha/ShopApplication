@@ -68,7 +68,7 @@
   2. Kafka는 메시지를 디스크에 저장하고 복제하여 고가용성을 보장합니다. 이로 인해 시스템 장애가 발생해도 메시지 손실 없이 데이터를 보존하고 복구할 수 있습니다.
   3. Kafka에게 채팅방과 메시지 라우팅의 복잡한 상태 관리를 위임시키며, 좀 더 간편하고 효율적인 채팅시스템을 구축할 수 있습니다.
 
-![image](https://github.com/LCEMocha/ShopApplication/assets/142338641/bc0c2533-725a-42d9-8956-77c354ab40b5)
+<img src="https://github.com/LCEMocha/ShopApplication/assets/142338641/bc0c2533-725a-42d9-8956-77c354ab40b5" width="200" height="400"/>
 
 
 
