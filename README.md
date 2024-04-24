@@ -5,6 +5,7 @@
 * 상품 주문 및 취소(실제 결제는 x), 장바구니, 주문내역 조회
 * Redis를 이용한 쿠폰 발급
 * Kafka를 이용한 챗봇
+* Docker 컨테이너를 이용하여 EC2 인스턴스에 배포
 
 
 ## 💻 주요 사용 기술
@@ -13,6 +14,8 @@
 * MySQL
 * Redis
 * Kafka
+* Docker
+* EC2
 
 ## 💻 ERD
 ![ERD](https://github.com/LCEMocha/ShopApplication/assets/142338641/74ca2446-da9c-4028-95c8-176674096dc9)
@@ -48,12 +51,12 @@
 * [redis 설정](https://github.com/LCEMocha/ShopApplication/blob/master/src/main/java/com/shop/config/RedisConfig.java)
 * [분산락 설정](https://github.com/LCEMocha/ShopApplication/blob/master/src/main/java/com/shop/config/DistributedLock.java)
 
-### 2. 대기열 구현
+### 2. Redis Sorted Set 이용한 대기열 구현
 * 우아한Tech 유튜브 참고 : https://www.youtube.com/watch?v=MTSn93rNPPE
 * 기준 시간(쿠폰이 출시된 시간)으로부터 고객의 요청까지 걸린 시간을 점수화(ZADD)하여 선착순 순서를 부여(ZRANK)
 * 5초에 한번씩, 대기열의 상위 200명을 참가열(쿠폰발급 서비스로직 시작)로 전송
   
-  ![image](https://github.com/LCEMocha/ShopApplication/assets/142338641/c75313b7-c19a-4530-927e-994c39ea4e42)
+  <img src="https://github.com/LCEMocha/ShopApplication/assets/142338641/c75313b7-c19a-4530-927e-994c39ea4e42" width="750" height="400"/>
 * 1000개의 스레드에서 동시에 쿠폰 발급을 요청하는 테스트코드를 통과하였습니다.
 * [대기열 구현 코드](https://github.com/LCEMocha/ShopApplication/blob/master/src/main/java/com/shop/controller/IssuanceQueue.java)
 
@@ -65,13 +68,11 @@
   2. Kafka는 메시지를 디스크에 저장하고 복제하여 고가용성을 보장합니다. 이로 인해 시스템 장애가 발생해도 메시지 손실 없이 데이터를 보존하고 복구할 수 있습니다.
   3. Kafka에게 채팅방과 메시지 라우팅의 복잡한 상태 관리를 위임시키며, 좀 더 간편하고 효율적인 채팅시스템을 구축할 수 있습니다.
 
-![image](https://github.com/LCEMocha/ShopApplication/assets/142338641/bc0c2533-725a-42d9-8956-77c354ab40b5)
-
+<img src="https://github.com/LCEMocha/ShopApplication/assets/142338641/bc0c2533-725a-42d9-8956-77c354ab40b5" width="350" height="450"/>
 
 
 
 ## 🔧 한계
-* 아직 미완성 프로젝트로, 마지막으로 EC2 인스턴스에 Docker 컨테이너를 설치하여 배포해보려고 합니다.
-* 개인적으로 로컬 환경에서만 진행한 프로젝트이기 때문에 배포와 협업을 해보지 못한 점이 아쉽습니다. 향후 GitHub Action툴을 이용한 CI/CD에 대해 공부해보고자 합니다.
-* 테스트코드 작성이 부족했다고 생각됩니다(특히 단위테스트).
+* 개인적으로 진행한 프로젝트이기 때문에 협업을 해보지 못한 점이 아쉽습니다. CI/CD 무중단 배포 파이프라인 구축을 추가해보고자 합니다.
+* 단위테스트코드 작성을 다양화했으면 좋을 것 같다는 아쉬움이 있습니다.
 * 프론트 구현은 쇼핑몰의 큰 틀만 잡은 정도입니다. 
