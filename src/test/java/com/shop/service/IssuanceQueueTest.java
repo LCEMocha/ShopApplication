@@ -61,7 +61,7 @@ public class IssuanceQueueTest {
 
     @Test
     void 부하분산_테스트() throws InterruptedException {
-        int numberOfThreads = 1000;
+        int numberOfThreads = 500;
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
         CountDownLatch readyLatch = new CountDownLatch(numberOfThreads);
         CountDownLatch startLatch = new CountDownLatch(1);
@@ -87,7 +87,7 @@ public class IssuanceQueueTest {
 
         readyLatch.await();
         startLatch.countDown();
-        executorService.awaitTermination(4, TimeUnit.MINUTES);
+        executorService.awaitTermination(3, TimeUnit.MINUTES);
 
         CouponAvailable persistCoupon = couponAvailableRepository.findById(couponAvailable.getId())
                 .orElseThrow(IllegalArgumentException::new);

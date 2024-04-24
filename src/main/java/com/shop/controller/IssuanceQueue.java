@@ -10,6 +10,7 @@ import java.security.Principal;
 import java.time.Instant;
 
 @RestController
+@RequestMapping("/coupon")
 public class IssuanceQueue {
 
     private RedisCommands<String, String> redisCommands;
@@ -40,6 +41,7 @@ public class IssuanceQueue {
         long size = 150;
         var userIds = redisCommands.zrange("eventQueue", 0, size - 1);
         userIds.forEach(couponController::requestCoupon);
+        System.out.println("스케줄러로 매핑");
         redisCommands.zremrangebyrank("eventQueue", 0, size - 1);
     }
 }
