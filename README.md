@@ -67,7 +67,7 @@
   1. WebSocket 서버 앞에 분산 메시지 브로커 시스템인 kafka를 두어 부하를 분산시킴으로써 대규모의 데이터 스트림을 효율적으로 처리할 수 있습니다.
   2. Kafka는 메시지를 디스크에 저장하고 복제하여 고가용성을 보장합니다. 이로 인해 시스템 장애가 발생해도 메시지 손실 없이 데이터를 보존하고 복구할 수 있습니다.
   3. Kafka에게 채팅방과 메시지 라우팅의 복잡한 상태 관리를 위임시키며, 좀 더 간편하고 효율적인 채팅시스템을 구축할 수 있습니다.
-<img src="https://github.com/user-attachments/assets/6bd97834-f3bd-426d-ac00-cc3c8462a11d" width="400" height="750"/>
+<img src="https://github.com/user-attachments/assets/6bd97834-f3bd-426d-ac00-cc3c8462a11d" width="400" height="600"/>
 
 
 
